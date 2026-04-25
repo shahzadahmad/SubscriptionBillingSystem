@@ -1,0 +1,6 @@
+@SubscriptionBillingSystem.API_HostAddress = http://localhost:5258
+
+GET {{SubscriptionBillingSystem.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
