@@ -1,6 +1,6 @@
 # Subscription Billing System
 
-A production-style **Subscription Billing System** built with **.NET 9**, following **Clean Architecture** and **Domain-Driven Design (DDD)** principles.
+A production-style **Subscription Billing System** built with **.NET 9**, following **Clean Architecture**, **Domain-Driven Design (DDD)**, and **event-driven architecture** principles.
 
 ---
 
@@ -12,46 +12,50 @@ A production-style **Subscription Billing System** built with **.NET 9**, follow
   - Activate Subscription  
   - Cancel Subscription  
 - Invoice Management  
-  - Automatic invoice generation  
+  - Asynchronous invoice generation (event-driven)  
   - Payment handling  
-- Domain Events  
+- Domain Events (decoupled aggregates)  
 - Outbox Pattern (reliable event processing)  
 - Background Job with retry (exponential backoff)  
+- CQRS (Commands & Queries separation)  
 - Unit tested domain layer  
 
 ---
 
 ## 🧱 Architecture
 
-```
-API → Application → Domain
-             ↓
-        Infrastructure
-```
+API → Application → Domain  
+             ↓  
+        Infrastructure  
 
 ---
+
+## 📦 Layers Overview
 
 ### Domain Layer
 - Aggregates: Customer, Subscription, Invoice  
 - Value Objects: Email, Money  
-- Domain Events  
+- Domain Events (pure, decoupled)  
 - Contains all business rules and invariants  
+- No cross-aggregate dependencies  
 
 ---
 
 ### Application Layer
 - CQRS (Commands & Queries)  
 - MediatR handlers  
+- Event Handlers (application-level orchestration)  
+- Transaction behavior (applies only to commands)  
 - Validation  
-- Pipeline behaviors  
 
 ---
 
 ### Infrastructure Layer
 - EF Core (DbContext)  
-- Outbox Pattern  
-- Background processing  
-- Retry mechanism  
+- Outbox Pattern implementation  
+- Background processing service  
+- Retry mechanism with exponential backoff  
+- Safe event serialization/deserialization  
 
 ---
 
@@ -64,62 +68,57 @@ API → Application → Domain
 
 ## 🧠 Key Design Decisions
 
-### Domain-Driven Design
-Business logic is encapsulated inside aggregates.
+### ✅ Aggregate Decoupling
+- Removed direct dependency between Subscription and Invoice  
+- Subscription raises InvoiceGenerationRequestedEvent  
+- Invoice creation handled in Application layer  
 
 ---
 
-### Outbox Pattern
-Events are stored in database and processed asynchronously to ensure reliability and avoid data loss.
+### ✅ Event-Driven Architecture
+- Domain raises events → Application handles them  
+- Enables loose coupling and scalability  
 
 ---
 
-### Retry Mechanism
-Includes:
-- RetryCount  
-- MaxRetryCount  
-- NextRetryAt  
-- LastError  
-
-Uses exponential backoff for retries.
+### ✅ Outbox Pattern
+- Events stored in DB and processed asynchronously  
+- Ensures reliability and eventual consistency  
 
 ---
 
-### Aggregate Root Pattern
-Only aggregate roots modify internal collections to maintain consistency.
+### ✅ Serialization Fix
+- Fixed serialization using runtime type  
+- Prevented data loss during deserialization  
+- Supports complex Value Objects like Money  
 
 ---
 
-### EF Core Tracking Fix
-Custom handling ensures correct INSERT/UPDATE behavior for child entities inside aggregates.
+### ✅ Retry Mechanism
+- RetryCount, MaxRetryCount  
+- NextRetryAt, LastError  
+- Exponential backoff  
+
+---
+
+### ✅ Transaction Handling
+- Transactions only for Commands  
+- Queries do not trigger SaveChanges  
 
 ---
 
 ## ⚙️ How to Run
 
-### Clone repository
-```
-git clone https://github.com/shahzadahmad/SubscriptionBillingSystem.git
-cd SubscriptionBillingSystem
-```
+git clone https://github.com/shahzadahmad/SubscriptionBillingSystem.git  
+cd SubscriptionBillingSystem  
 
-### Run API
-```
-dotnet run --project SubscriptionBillingSystem.Api
-```
-
-### Open Swagger
-```
-https://localhost:<port>/swagger
-```
+dotnet run --project SubscriptionBillingSystem.Api  
 
 ---
 
 ## 🧪 Running Tests
 
-```
-dotnet test
-```
+dotnet test  
 
 ---
 
@@ -127,8 +126,9 @@ dotnet test
 
 1. Create Customer  
 2. Create Subscription  
-3. Activate Subscription → generates Invoice  
-4. Pay Invoice → triggers event  
+3. Activate Subscription  
+4. Generate Invoice (event-driven)  
+5. Pay Invoice  
 
 ---
 
@@ -140,15 +140,6 @@ dotnet test
 - FluentValidation  
 - xUnit  
 - FluentAssertions  
-
----
-
-## 📈 Future Improvements
-
-- Idempotent payment APIs  
-- Dead letter queue  
-- Distributed messaging (Kafka / RabbitMQ)  
-- Authentication & authorization  
 
 ---
 
