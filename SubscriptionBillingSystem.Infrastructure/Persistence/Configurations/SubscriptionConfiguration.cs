@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate;
 using SubscriptionBillingSystem.Domain.Aggregates.InvoiceAggregate;
+using SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate;
 
 namespace SubscriptionBillingSystem.Infrastructure.Persistence.Configurations
 {
@@ -9,28 +9,22 @@ namespace SubscriptionBillingSystem.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Subscription> builder)
         {
+            // PRIMARY KEY
             builder.HasKey(x => x.Id);
 
+            // BASIC PROPERTIES
             builder.Property(x => x.CustomerId).IsRequired();
             builder.Property(x => x.Status).IsRequired();
             builder.Property(x => x.LastBillingDate);
 
-            // Value Object
+            // VALUE OBJECT: Money
             builder.OwnsOne(x => x.MonthlyPrice, money =>
             {
                 money.Property(m => m.Amount).IsRequired();
-                money.Property(m => m.Currency).HasMaxLength(3).IsRequired();
-            });
-
-            // ONLY RELATIONSHIP DEFINED HERE
-            builder.HasMany(x => x.Invoices)
-                .WithOne(i => i.Subscription)
-                .HasForeignKey(i => i.SubscriptionId);                
-
-            // USE BACKING FIELD
-            builder.Metadata
-                .FindNavigation(nameof(Subscription.Invoices))!
-                .SetPropertyAccessMode(PropertyAccessMode.Field);
+                money.Property(m => m.Currency)
+                    .HasMaxLength(3)
+                    .IsRequired();
+            });  
         }
     }
 }

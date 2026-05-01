@@ -1,5 +1,8 @@
 ﻿namespace SubscriptionBillingSystem.Infrastructure.Persistence.Outbox
 {
+    /// <summary>
+    /// Represents a persisted domain event for reliable processing (Outbox Pattern).
+    /// </summary>
     public class OutboxMessage
     {
         public Guid Id { get; set; }
@@ -9,12 +12,10 @@
         public DateTime? ProcessedOn { get; set; }
         public bool IsProcessed { get; set; }
 
-        // 🔥 Retry support
+        // Retry mechanism for reliability
         public int RetryCount { get; set; }
         public int MaxRetryCount { get; set; } = 5;
-
         public string? LastError { get; set; }
-
         public DateTime? NextRetryAt { get; set; }
     }
 }

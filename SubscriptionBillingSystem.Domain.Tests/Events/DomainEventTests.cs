@@ -25,7 +25,7 @@ namespace SubscriptionBillingSystem.Tests.Events
         }
 
         [Fact]
-        public void ActivateSubscription_ShouldRaiseInvoiceGeneratedEvent()
+        public void ActivateSubscription_ShouldRaiseInvoiceGenerationRequestedEvent()
         {
             var subscription = new Subscription(
                 Guid.NewGuid(),
@@ -34,18 +34,17 @@ namespace SubscriptionBillingSystem.Tests.Events
 
             subscription.Activate(DateTime.UtcNow);
 
-            var invoiceEvent = GetEvent<InvoiceGeneratedEvent>(subscription);
+            // ✔ Correct event now raised (NOT InvoiceGeneratedEvent)
+            var evt = GetEvent<InvoiceGenerationRequestedEvent>(subscription);
 
-            invoiceEvent.Should().NotBeNull();
+            evt.Should().NotBeNull();
 
-            var invoice = subscription.Invoices.Single();
-
-            invoiceEvent!.InvoiceId.Should().Be(invoice.Id);
-            invoiceEvent.SubscriptionId.Should().Be(subscription.Id);
+            evt!.SubscriptionId.Should().Be(subscription.Id);
+            evt.Amount.Should().Be(subscription.MonthlyPrice);            
         }
 
         [Fact]
-        public void GenerateInvoice_ShouldRaiseInvoiceGeneratedEvent()
+        public void GenerateInvoice_ShouldRaiseInvoiceGenerationRequestedEvent()
         {
             var subscription = new Subscription(
                 Guid.NewGuid(),
@@ -60,7 +59,7 @@ namespace SubscriptionBillingSystem.Tests.Events
 
             subscription.GenerateInvoice(now.AddDays(31));
 
-            HasEvent<InvoiceGeneratedEvent>(subscription)
+            HasEvent<InvoiceGenerationRequestedEvent>(subscription)
                 .Should()
                 .BeTrue();
         }

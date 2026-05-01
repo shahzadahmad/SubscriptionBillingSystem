@@ -8,7 +8,7 @@ namespace SubscriptionBillingSystem.Domain.Aggregates.InvoiceAggregate
     public class Invoice : AggregateRoot
     {
         public Guid SubscriptionId { get; private set; }
-        public Money Amount { get; private set; }
+        public Money? Amount { get; private set; }
         public InvoiceStatus Status { get; private set; }
 
         // 🔥 Navigation property
@@ -16,7 +16,7 @@ namespace SubscriptionBillingSystem.Domain.Aggregates.InvoiceAggregate
 
         private Invoice() { } // EF Core
 
-        public Invoice(Guid subscriptionId, Money amount)
+        public Invoice(Guid subscriptionId, Money? amount)
         {
             Id = Guid.NewGuid();
             SubscriptionId = subscriptionId;

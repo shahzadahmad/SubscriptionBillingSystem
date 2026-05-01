@@ -12,6 +12,14 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Customers\EventHandlers\" />
+    <Folder Include="Features\Customers\Queries\" />
+    <Folder Include="Features\Payments\Commands\" />
+    <Folder Include="Features\Payments\Queries\" />
+    <Folder Include="Features\Subscriptions\Queries\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

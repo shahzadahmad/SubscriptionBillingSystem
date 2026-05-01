@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using SubscriptionBillingSystem.Domain.Events;
 
-namespace SubscriptionBillingSystem.Application.EventHandlers.Payments
+namespace SubscriptionBillingSystem.Application.Features.Payments.EventHandlers
 {
     public class PaymentReceivedHandler
         : INotificationHandler<PaymentReceivedEvent>

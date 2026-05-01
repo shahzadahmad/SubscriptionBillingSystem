@@ -2,11 +2,19 @@
 using Microsoft.EntityFrameworkCore;
 using SubscriptionBillingSystem.Application.Common.Exceptions;
 using SubscriptionBillingSystem.Application.Common.Interfaces;
-using SubscriptionBillingSystem.Domain.Aggregates.InvoiceAggregate;
 
 namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
 {
-    public class ActivateSubscriptionHandler : IRequestHandler<ActivateSubscriptionCommand>
+    /// <summary>
+    /// Handles subscription activation.
+    /// 
+    /// Flow:
+    /// 1. Load Subscription aggregate
+    /// 2. Execute domain logic (Activate)
+    /// 3. TransactionBehavior will persist changes + Outbox
+    /// </summary>
+    public class ActivateSubscriptionHandler
+        : IRequestHandler<ActivateSubscriptionCommand, Unit>
     {
         private readonly IApplicationDbContext _context;
         private readonly IDateTime _dateTime;
@@ -19,18 +27,29 @@ namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
             _dateTime = dateTime;
         }
 
-        public async Task Handle(ActivateSubscriptionCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(
+            ActivateSubscriptionCommand request,
+            CancellationToken cancellationToken)
         {
+            // Fetch Subscription aggregate
             var subscription = await _context.Subscriptions
-                .FirstOrDefaultAsync(x => x.Id == request.SubscriptionId, cancellationToken);
+                .FirstOrDefaultAsync(
+                    x => x.Id == request.SubscriptionId,
+                    cancellationToken);
 
             if (subscription is null)
-                throw new NotFoundException(nameof(subscription), request.SubscriptionId);
+                throw new NotFoundException(nameof(ActivateSubscriptionCommand), request.SubscriptionId);
 
-            // Use system-controlled time
-            subscription.Activate(_dateTime.UtcNow);            
+            // Execute domain logic (raises domain events)
+            subscription.Activate(_dateTime.UtcNow);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            // ❌ DO NOT call SaveChangesAsync here
+            // TransactionBehavior will handle:
+            // - SaveChanges
+            // - Outbox persistence
+            // - Transaction commit
+
+            return Unit.Value;
         }
     }
 }

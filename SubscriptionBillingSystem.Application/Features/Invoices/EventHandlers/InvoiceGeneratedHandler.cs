@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using SubscriptionBillingSystem.Domain.Events;
 
-namespace SubscriptionBillingSystem.Application.EventHandlers.Invoices
+namespace SubscriptionBillingSystem.Application.Features.Invoices.EventHandlers
 {
     public class InvoiceGeneratedHandler
         : INotificationHandler<InvoiceGeneratedEvent>

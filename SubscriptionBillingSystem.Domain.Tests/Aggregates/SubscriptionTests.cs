@@ -18,13 +18,18 @@ namespace SubscriptionBillingSystem.Domain.Tests.Aggregates
 
             subscription.Activate(DateTime.UtcNow);
 
+            // ✔ Subscription becomes Active
             subscription.Status.Should().Be(SubscriptionStatus.Active);
 
+            // ✔ Domain event is raised
             HasEvent<SubscriptionActivatedEvent>(subscription)
                 .Should()
                 .BeTrue();
 
-            subscription.Invoices.Should().HaveCount(1);
+            // ✔ Invoice is NOT created in domain anymore (important fix)
+            HasEvent<InvoiceGenerationRequestedEvent>(subscription)
+                .Should()
+                .BeTrue();
         }
 
         [Fact]

@@ -2,11 +2,21 @@
 using Microsoft.EntityFrameworkCore;
 using SubscriptionBillingSystem.Application.Common.Exceptions;
 using SubscriptionBillingSystem.Application.Common.Interfaces;
-using SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate;
 
 namespace SubscriptionBillingSystem.Application.Features.Invoices.Commands
 {
-    public class PayInvoiceHandler : IRequestHandler<PayInvoiceCommand>
+    /// <summary>
+    /// Handles invoice payment.
+    /// 
+    /// Flow:
+    /// 1. Load Invoice aggregate
+    /// 2. Execute domain logic (Pay)
+    /// 3. TransactionBehavior will:
+    ///    - Save changes
+    ///    - Persist Outbox messages
+    ///    - Commit transaction
+    /// </summary>
+    public class PayInvoiceHandler : IRequestHandler<PayInvoiceCommand, Unit>
     {
         private readonly IApplicationDbContext _context;
 
@@ -15,17 +25,29 @@ namespace SubscriptionBillingSystem.Application.Features.Invoices.Commands
             _context = context;
         }
 
-        public async Task Handle(PayInvoiceCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle( 
+            PayInvoiceCommand request,
+            CancellationToken cancellationToken)
         {
+            // Fetch Invoice aggregate
             var invoice = await _context.Invoices
-                .FirstOrDefaultAsync(x => x.Id == request.InvoiceId, cancellationToken);
+                .FirstOrDefaultAsync(
+                    x => x.Id == request.InvoiceId,
+                    cancellationToken);
 
             if (invoice is null)
-                throw new NotFoundException(nameof(invoice), request.InvoiceId);
+                throw new NotFoundException(nameof(PayInvoiceCommand), request.InvoiceId);
 
+            // Execute domain logic (raises PaymentReceivedEvent)
             invoice.Pay();
 
-            await _context.SaveChangesAsync(cancellationToken);
+            // ❌ DO NOT call SaveChangesAsync here
+            // ✔ TransactionBehavior will handle:
+            //    - SaveChanges
+            //    - Outbox persistence
+            //    - Transaction commit
+
+            return Unit.Value;
         }
     }
 }

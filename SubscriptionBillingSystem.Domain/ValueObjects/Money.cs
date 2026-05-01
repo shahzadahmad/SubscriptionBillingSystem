@@ -1,4 +1,5 @@
 ﻿using SubscriptionBillingSystem.Domain.Common;
+using System.Text.Json.Serialization;
 
 namespace SubscriptionBillingSystem.Domain.ValueObjects;
 
@@ -9,6 +10,7 @@ public class Money : ValueObject
 
     private Money() { } // EF
 
+    [JsonConstructor]
     public Money(decimal amount, string currency)
     {
         if (amount < 0)

@@ -9,13 +9,10 @@ namespace SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate
     {
         public Guid CustomerId { get; private set; }
         public SubscriptionStatus Status { get; private set; }
-        public Money MonthlyPrice { get; private set; }        
+        public Money? MonthlyPrice { get; private set; }        
         public DateTime? LastBillingDate { get; private set; }
 
         private const int BillingCycleDays = 30;
-
-        private readonly List<Invoice> _invoices = new();
-        public IReadOnlyCollection<Invoice> Invoices => _invoices.AsReadOnly();
 
         private Subscription() { }
 
@@ -38,10 +35,12 @@ namespace SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate
             if (Status == SubscriptionStatus.Active)
                 throw SubscriptionErrors.AlreadyActive();
 
-            Status = SubscriptionStatus.Active;            
+            Status = SubscriptionStatus.Active;
 
+            // Raise event instead of performing external actions directly
             RaiseDomainEvent(new SubscriptionActivatedEvent(Id));
 
+            // Trigger billing via domain logic (event-driven)
             GenerateInvoice(activationDate);
         }
 
@@ -54,6 +53,10 @@ namespace SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate
                 throw SubscriptionErrors.AlreadyCancelled();
 
             Status = SubscriptionStatus.Cancelled;
+
+            // NOTE:
+            // We DO NOT delete invoices or modify history.
+            // Future billing will stop due to status check.
         }
 
         // -------------------------
@@ -61,14 +64,25 @@ namespace SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate
         // -------------------------
         public void GenerateInvoice(DateTime billingDate)
         {
+            // Validate business rules before allowing billing
             EnsureCanGenerateInvoice(billingDate);
 
-            var invoice = new Invoice(Id, MonthlyPrice);
+            // IMPORTANT:
+            // We intentionally do NOT create an Invoice inside the aggregate.
+            // This keeps Subscription and Invoice as independent aggregates
+            // and prevents tight coupling in the domain model.
 
-            _invoices.Add(invoice);
             LastBillingDate = billingDate;
 
-            RaiseDomainEvent(new InvoiceGeneratedEvent(invoice.Id, invoice.SubscriptionId));
+            // DOMAIN DECISION:
+            // We raise a domain event to indicate that invoice generation has been requested.
+            // The actual Invoice creation is handled outside the aggregate
+            // (Application Layer via event handler), ensuring proper separation of concerns.
+
+            RaiseDomainEvent(new InvoiceGenerationRequestedEvent(
+                subscriptionId: Id,
+                amount: MonthlyPrice
+            ));
         }
 
         // -------------------------

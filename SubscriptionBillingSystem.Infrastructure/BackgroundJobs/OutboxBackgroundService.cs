@@ -34,7 +34,7 @@ namespace SubscriptionBillingSystem.Infrastructure.BackgroundJobs
                         .GetRequiredService<OutboxProcessor>();
 
                     // Execute Outbox processing
-                    await processor.ProcessAsync();
+                    await processor.ProcessAsync(stoppingToken);
                 }
                 catch
                 {
