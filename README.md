@@ -47,11 +47,15 @@ API → Application → Domain
 - Event Handlers (application-level orchestration)  
 - Transaction behavior (applies only to commands)  
 - Validation  
+- Depends only on abstractions (`IAggregateContext`, `IReadDbContext`)  
+- **No direct dependency on Infrastructure layer (EF Core removed from Application layer)**  
 
 ---
 
 ### Infrastructure Layer
 - EF Core (DbContext)  
+- Implements `IAggregateContext` (write side)  
+- Implements `ReadDbContext` / `IReadDbContext` (read side)  
 - Outbox Pattern implementation  
 - Background processing service  
 - Retry mechanism with exponential backoff  
@@ -67,6 +71,15 @@ API → Application → Domain
 ---
 
 ## 🧠 Key Design Decisions
+
+### ✅ Clean CQRS Separation (NEW)
+- Application layer no longer depends on Infrastructure
+- Introduced abstractions:
+  - `IAggregateContext` → write side (aggregates + persistence)
+  - `IReadDbContext` / `ReadDbContext` → query side
+- Clear separation between command and query responsibilities
+
+---
 
 ### ✅ Aggregate Decoupling
 - Removed direct dependency between Subscription and Invoice  
@@ -104,15 +117,17 @@ API → Application → Domain
 ### ✅ Transaction Handling
 - Transactions only for Commands  
 - Queries do not trigger SaveChanges  
+- Controlled via Application-level Transaction Behavior  
 
 ---
 
 ## ⚙️ How to Run
 
+```bash
 git clone https://github.com/shahzadahmad/SubscriptionBillingSystem.git  
 cd SubscriptionBillingSystem  
 
-dotnet run --project SubscriptionBillingSystem.Api  
+dotnet run --project SubscriptionBillingSystem.Api    
 
 ---
 
