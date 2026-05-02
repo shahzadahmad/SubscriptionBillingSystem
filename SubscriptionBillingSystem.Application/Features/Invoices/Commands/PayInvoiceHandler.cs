@@ -1,7 +1,6 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
 using SubscriptionBillingSystem.Application.Common.Exceptions;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 
 namespace SubscriptionBillingSystem.Application.Features.Invoices.Commands
 {
@@ -18,9 +17,9 @@ namespace SubscriptionBillingSystem.Application.Features.Invoices.Commands
     /// </summary>
     public class PayInvoiceHandler : IRequestHandler<PayInvoiceCommand, Unit>
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IAggregateContext _context;
 
-        public PayInvoiceHandler(IApplicationDbContext context)
+        public PayInvoiceHandler(IAggregateContext context)
         {
             _context = context;
         }
@@ -30,10 +29,7 @@ namespace SubscriptionBillingSystem.Application.Features.Invoices.Commands
             CancellationToken cancellationToken)
         {
             // Fetch Invoice aggregate
-            var invoice = await _context.Invoices
-                .FirstOrDefaultAsync(
-                    x => x.Id == request.InvoiceId,
-                    cancellationToken);
+            var invoice = await _context.GetInvoiceByIdAsync(request.InvoiceId, cancellationToken);
 
             if (invoice is null)
                 throw new NotFoundException(nameof(PayInvoiceCommand), request.InvoiceId);

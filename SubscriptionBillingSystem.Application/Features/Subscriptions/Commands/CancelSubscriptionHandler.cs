@@ -1,7 +1,6 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
 using SubscriptionBillingSystem.Application.Common.Exceptions;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 
 namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
 {
@@ -16,9 +15,9 @@ namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
     public class CancelSubscriptionHandler
         : IRequestHandler<CancelSubscriptionCommand, Unit>
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IAggregateContext _context;
 
-        public CancelSubscriptionHandler(IApplicationDbContext context)
+        public CancelSubscriptionHandler(IAggregateContext context)
         {
             _context = context;
         }
@@ -28,10 +27,7 @@ namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
             CancellationToken cancellationToken)
         {
             // Fetch Subscription aggregate
-            var subscription = await _context.Subscriptions
-                .FirstOrDefaultAsync(
-                    x => x.Id == request.SubscriptionId,
-                    cancellationToken);
+            var subscription = await _context.GetSubscriptionByIdAsync(request.SubscriptionId, cancellationToken);
 
             if (subscription is null)
                 throw new NotFoundException(nameof(CancelSubscriptionCommand), request.SubscriptionId);

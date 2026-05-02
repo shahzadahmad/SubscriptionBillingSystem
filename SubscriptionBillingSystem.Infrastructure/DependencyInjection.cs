@@ -2,10 +2,11 @@
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 using SubscriptionBillingSystem.Infrastructure.BackgroundJobs;
 using SubscriptionBillingSystem.Infrastructure.Persistence;
+using SubscriptionBillingSystem.Infrastructure.Persistence.ReadModels;
 using SubscriptionBillingSystem.Infrastructure.Services;
 
 namespace SubscriptionBillingSystem.Infrastructure
@@ -33,14 +34,7 @@ namespace SubscriptionBillingSystem.Infrastructure
 
                 options.ConfigureWarnings(w =>
                     w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
-            });
-
-            /*
-             * Map Application abstraction to EF DbContext
-             * This allows Application layer to depend on interface only
-             */
-            services.AddScoped<IApplicationDbContext>(provider =>
-                provider.GetRequiredService<ApplicationDbContext>());
+            }); 
 
             // ======================================================
             // UNIT OF WORK (Transaction Management)
@@ -69,6 +63,11 @@ namespace SubscriptionBillingSystem.Infrastructure
             // DOMAIN EVENTS DISPATCHER
             // ======================================================
             //services.AddScoped<DomainEventDispatcher>();
+
+            services.AddScoped<IAggregateContext>(provider =>
+                provider.GetRequiredService<ApplicationDbContext>());
+
+            services.AddScoped<IReadDbContext, ReadDbContext>();
 
             return services;
         }

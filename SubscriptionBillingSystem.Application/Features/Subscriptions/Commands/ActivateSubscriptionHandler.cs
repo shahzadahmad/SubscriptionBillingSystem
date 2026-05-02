@@ -1,7 +1,7 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
 using SubscriptionBillingSystem.Application.Common.Exceptions;
 using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 
 namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
 {
@@ -16,11 +16,11 @@ namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
     public class ActivateSubscriptionHandler
         : IRequestHandler<ActivateSubscriptionCommand, Unit>
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IAggregateContext _context;
         private readonly IDateTime _dateTime;
 
         public ActivateSubscriptionHandler(
-            IApplicationDbContext context,
+            IAggregateContext context,
             IDateTime dateTime)
         {
             _context = context;
@@ -31,11 +31,8 @@ namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
             ActivateSubscriptionCommand request,
             CancellationToken cancellationToken)
         {
-            // Fetch Subscription aggregate
-            var subscription = await _context.Subscriptions
-                .FirstOrDefaultAsync(
-                    x => x.Id == request.SubscriptionId,
-                    cancellationToken);
+            // Fetch Subscription aggregate            
+            var subscription = await _context.GetSubscriptionByIdAsync(request.SubscriptionId, cancellationToken);
 
             if (subscription is null)
                 throw new NotFoundException(nameof(ActivateSubscriptionCommand), request.SubscriptionId);

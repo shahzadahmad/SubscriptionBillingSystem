@@ -1,7 +1,7 @@
 ﻿using MediatR;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
 using SubscriptionBillingSystem.Domain.Aggregates.CustomerAggregate;
 using SubscriptionBillingSystem.Domain.ValueObjects;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 
 namespace SubscriptionBillingSystem.Application.Features.Customers.Commands
 {
@@ -19,9 +19,9 @@ namespace SubscriptionBillingSystem.Application.Features.Customers.Commands
     public class CreateCustomerHandler
         : IRequestHandler<CreateCustomerCommand, Guid>
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IAggregateContext _context;
 
-        public CreateCustomerHandler(IApplicationDbContext context)
+        public CreateCustomerHandler(IAggregateContext context)
         {
             _context = context;
         }

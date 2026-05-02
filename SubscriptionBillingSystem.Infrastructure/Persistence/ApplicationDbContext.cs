@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 using SubscriptionBillingSystem.Domain.Aggregates.CustomerAggregate;
 using SubscriptionBillingSystem.Domain.Aggregates.InvoiceAggregate;
 using SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate;
@@ -18,7 +18,7 @@ namespace SubscriptionBillingSystem.Infrastructure.Persistence
     /// - Captures domain events
     /// - Stores events in Outbox for reliable processing
     /// </summary>
-    public class ApplicationDbContext : DbContext, IApplicationDbContext
+    public class ApplicationDbContext : DbContext, IAggregateContext
     {
         public ApplicationDbContext(
             DbContextOptions<ApplicationDbContext> options)
@@ -39,8 +39,7 @@ namespace SubscriptionBillingSystem.Infrastructure.Persistence
         /// Saves changes and ensures domain events are persisted
         /// using Outbox pattern for reliability.
         /// </summary>
-        public override async Task<int> SaveChangesAsync(
-            CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             // 1. Collect domain events from aggregates
             var domainEntities = ChangeTracker
@@ -96,5 +95,15 @@ namespace SubscriptionBillingSystem.Infrastructure.Persistence
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
             base.OnModelCreating(modelBuilder);
         }
+
+        public async Task<Invoice?> GetInvoiceByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await Invoices.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        }
+
+        public async Task<Subscription?> GetSubscriptionByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await Subscriptions.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        }      
     }
 }

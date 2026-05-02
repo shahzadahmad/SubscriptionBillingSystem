@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 using SubscriptionBillingSystem.Domain.Aggregates.InvoiceAggregate;
 using SubscriptionBillingSystem.Domain.Events;
 
@@ -11,11 +11,11 @@ namespace SubscriptionBillingSystem.Application.Features.Invoices.EventHandlers
     public class InvoiceGenerationRequestedHandler
         : INotificationHandler<InvoiceGenerationRequestedEvent>
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IAggregateContext _context;
         private readonly IMediator _mediator;
 
         public InvoiceGenerationRequestedHandler(
-            IApplicationDbContext context,
+            IAggregateContext context,
             IMediator mediator)
         {
             _context = context;

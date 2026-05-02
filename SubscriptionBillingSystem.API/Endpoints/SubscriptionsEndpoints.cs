@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 using SubscriptionBillingSystem.Application.Features.Subscriptions.Commands;
 
 namespace SubscriptionBillingSystem.Api.Endpoints
@@ -46,7 +46,7 @@ namespace SubscriptionBillingSystem.Api.Endpoints
             // 🔍 DEBUG ENDPOINT
             // =========================
             app.MapGet("/debug/subscriptions", async (
-                IApplicationDbContext context) =>
+                IAggregateContext context) =>
             {
                 var data = await context.Subscriptions.ToListAsync();
                 return Results.Ok(data);

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 using SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate;
 
 namespace SubscriptionBillingSystem.Infrastructure.BackgroundJobs
@@ -39,19 +39,25 @@ namespace SubscriptionBillingSystem.Infrastructure.BackgroundJobs
         {
             using var scope = _scopeFactory.CreateScope();
 
-            var db = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+            var readDb = scope.ServiceProvider.GetRequiredService<IReadDbContext>();
+            var aggregateContext = scope.ServiceProvider.GetRequiredService<IAggregateContext>();
 
             var today = DateTime.UtcNow.Date;
 
-            // Get all active subscriptions
-            var subscriptions = await db.Subscriptions
-                .Where(x => x.Status == SubscriptionStatus.Active)
-                .ToListAsync(cancellationToken);
 
-            foreach (var subscription in subscriptions)
+            // ONLY IDs from read side
+            var subscriptionIds = await readDb.GetActiveSubscriptionIdsAsync(cancellationToken);
+
+            foreach (var id in subscriptionIds)
             {
                 try
                 {
+                    // Load ONE aggregate at a time
+                    var subscription = await aggregateContext.GetSubscriptionByIdAsync(id, cancellationToken);
+
+                    if (subscription is null)
+                        continue;
+
                     // Domain logic handles invoice creation rules
                     subscription.GenerateInvoice(today);
                 }
@@ -63,7 +69,7 @@ namespace SubscriptionBillingSystem.Infrastructure.BackgroundJobs
             }
 
             // Save all generated invoices and updates
-            await db.SaveChangesAsync(cancellationToken);
+            await aggregateContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

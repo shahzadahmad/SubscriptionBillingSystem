@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using SubscriptionBillingSystem.Application.Common.Interfaces;
+using SubscriptionBillingSystem.Application.Common.Interfaces.Persistence;
 using SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate;
 using SubscriptionBillingSystem.Domain.ValueObjects;
 
@@ -19,9 +19,9 @@ namespace SubscriptionBillingSystem.Application.Features.Subscriptions.Commands
     public class CreateSubscriptionHandler
         : IRequestHandler<CreateSubscriptionCommand, Guid>
     {
-        private readonly IApplicationDbContext _context;
+        private readonly IAggregateContext _context;
 
-        public CreateSubscriptionHandler(IApplicationDbContext context)
+        public CreateSubscriptionHandler(IAggregateContext context)
         {
             _context = context;
         }

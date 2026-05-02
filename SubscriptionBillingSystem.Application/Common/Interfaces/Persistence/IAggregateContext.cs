@@ -2,16 +2,21 @@
 using SubscriptionBillingSystem.Domain.Aggregates.CustomerAggregate;
 using SubscriptionBillingSystem.Domain.Aggregates.InvoiceAggregate;
 using SubscriptionBillingSystem.Domain.Aggregates.SubscriptionAggregate;
-using System.Collections.Generic;
 
-namespace SubscriptionBillingSystem.Application.Common.Interfaces
+namespace SubscriptionBillingSystem.Application.Common.Interfaces.Persistence
 {
-    public interface IApplicationDbContext
+    public interface IAggregateContext
     {
         DbSet<Customer> Customers { get; }
         DbSet<Subscription> Subscriptions { get; }
-        DbSet<Invoice> Invoices { get; }
+        DbSet<Invoice> Invoices { get; }        
 
+        // Aggregate access
+        Task<Invoice?> GetInvoiceByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<Subscription?> GetSubscriptionByIdAsync(Guid id, CancellationToken cancellationToken);        
+
+        // Persistence
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+
     }
 }
